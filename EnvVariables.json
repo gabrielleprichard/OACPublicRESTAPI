@@ -1,0 +1,69 @@
+{
+	"id": "8b3ffab8-eb91-4f62-be65-220d03a30eef",
+	"name": "REST API Environment",
+	"values": [
+		{
+			"key": "clientID",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "scope",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "deviceURL",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "deviceCode",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "tokenURL",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "clientSecret",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "accessTok",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "baseURL",
+			"value": "",
+			"type": "default",
+			"enabled": true
+		},
+		{
+			"key": "refreshTok",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		},
+		{
+			"key": "encodedCredentials",
+			"value": "",
+			"type": "any",
+			"enabled": true
+		}
+	],
+	"_postman_variable_scope": "environment",
+	"_postman_exported_at": "2024-06-17T15:36:54.725Z",
+	"_postman_exported_using": "Postman/11.1.25"
+}
