@@ -1,0 +1,2129 @@
+{
+	"info": {
+		"_postman_id": "c457dd80-3318-456e-b366-56ce34751535",
+		"name": "REST APIS for Oracle Analytics Cloud",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "17206382"
+	},
+	"item": [
+		{
+			"name": "Authorization",
+			"item": [
+				{
+					"name": "Step 1: Obtain Verification URL",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Parse the response body as JSON",
+									"var responseJson = pm.response.json();",
+									"",
+									"var deviceCode = responseJson.device_code;",
+									"pm.environment.set(\"deviceCode\", deviceCode);",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "response_type",
+									"value": "device_code",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "{{scope}}",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{clientID}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{deviceURL}}",
+							"host": [
+								"{{deviceURL}}"
+							]
+						},
+						"description": "This is a POST request, submitting data to an API via the request body. This request submits JSON data, and the data is reflected in the response.\n\nA successful POST request typically returns a `200 OK` or `201 Created` response code."
+					},
+					"response": []
+				},
+				{
+					"name": "Step 2: Obtain Access Token",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var responseJson= pm.response.json()",
+									"var accessToken = responseJson.access_token;",
+									"pm.environment.set(\"accessTok\", accessToken);",
+									"",
+									"var refreshToken = responseJson.refresh_token;",
+									"pm.environment.set(\"refreshTok\", refreshToken);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "urn:ietf:params:oauth:grant-type:device_code",
+									"type": "text"
+								},
+								{
+									"key": "client_id",
+									"value": "{{clientID}}",
+									"type": "text"
+								},
+								{
+									"key": "client_secret",
+									"value": "{{clientSecret}}",
+									"type": "text"
+								},
+								{
+									"key": "device_code",
+									"value": "{{deviceCode}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{tokenURL}}",
+							"host": [
+								"{{tokenURL}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Step 3 (Optional): Use Refresh Token to get Access Token",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var responseJson= pm.response.json()",
+									"var accessToken = responseJson.access_token;",
+									"pm.environment.set(\"accessTok\", accessToken);",
+									"",
+									"var refreshToken = responseJson.refresh_token;",
+									"pm.environment.set(\"refreshTok\", refreshToken);",
+									"",
+									"var clientId = pm.environment.get(\"clientID\");",
+									"var clientSecret = pm.environment.get(\"clientSecret\");",
+									"var combined = clientId + \":\" + clientSecret;",
+									"var encodedCredentials = Buffer.from(combined).toString('base64');",
+									"pm.environment.set(\"encodedCredentials\", encodedCredentials);",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Basic {{encodedCredentials}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "urlencoded",
+							"urlencoded": [
+								{
+									"key": "grant_type",
+									"value": "refresh_token",
+									"type": "text"
+								},
+								{
+									"key": "refresh_token",
+									"value": "{{refreshTok}}",
+									"type": "text"
+								},
+								{
+									"key": "scope",
+									"value": "{{scope}}",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{tokenURL}}",
+							"host": [
+								"{{tokenURL}}"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "# Authorization-related requests are included in this folder."
+		},
+		{
+			"name": "Catalog",
+			"item": [
+				{
+					"name": "General",
+					"item": [
+						{
+							"name": "Copy a catalog item",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var itemId = \"/@Catalog/shared/MyFolder/MyWorkbook\"; ",
+											"// var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"// pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"// pm.variables.set(\"type\", \"workbooks\");",
+											"",
+											"var itemId = \"<object id of item to copy>\"; //FILL ME IN ",
+											"var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"pm.variables.set(\"type\", \"<item type>\"); //FILL ME IN ",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "createIntermediateFolders",
+											"value": "",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "destId",
+											"value": "",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "destParentId",
+											"value": "",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "newItemName",
+											"value": "",
+											"type": "text",
+											"disabled": true
+										},
+										{
+											"key": "overwrite:",
+											"value": "",
+											"type": "text",
+											"disabled": true
+										}
+									]
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/:type/:id/actions/copy",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										":type",
+										":id",
+										"actions",
+										"copy"
+									],
+									"variable": [
+										{
+											"key": "type",
+											"value": "{{type}}"
+										},
+										{
+											"key": "id",
+											"value": "{{itemIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create a folder",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var folderName = \"/@Catalog/shared/MyFolder\"; ",
+											"// var folderNameEncoded = Buffer.from(folderName).toString('base64');",
+											"// pm.variables.set(\"folderNameEncoded\", folderNameEncoded);",
+											"",
+											"// var createIntermediateFolders = \"true\"",
+											"// pm.variables.set(\"createIntermediateFolders\", createIntermediateFolders);",
+											"",
+											"var folderName = \"<path to new folder including folder name>\";  //FILL ME IN",
+											"var folderNameEncoded = Buffer.from(folderName).toString('base64');",
+											"pm.variables.set(\"folderNameEncoded\", folderNameEncoded);",
+											"var createIntermediateFolders = \"<true or false>\" //FILL ME IN",
+											"pm.variables.set(\"createIntermediateFolders\", createIntermediateFolders);",
+											"",
+											"",
+											"",
+											"",
+											"",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"createIntermediateFolders\": {{createIntermediateFolders}},\n\"id\": \"{{folderNameEncoded}}\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/folders",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"folders"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Delete a folder",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var itemId = \"/@Catalog/shared/MyFolder\"; ",
+											"// var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"// pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"",
+											"var itemId = \"<path to folder>\"; //FILL ME IN",
+											"var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "DELETE",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/folders/:id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"folders",
+										":id"
+									],
+									"query": [
+										{
+											"key": "recursive",
+											"value": null,
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "id",
+											"value": "{{itemIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get a catalog item ACL",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var itemId = \"/@Catalog/shared/MyWb\"; ",
+											"// var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"// pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"// pm.variables.set(\"type\", \"workbooks\");",
+											"",
+											"var itemId = \"<item object id>\"; //FILL ME IN",
+											"var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"pm.variables.set(\"type\", \"<fill in item type>\"); //fill in with your own value",
+											"",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/:type/:id/actions/getACL",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										":type",
+										":id",
+										"actions",
+										"getACL"
+									],
+									"variable": [
+										{
+											"key": "type",
+											"value": "{{type}}"
+										},
+										{
+											"key": "id",
+											"value": "{{itemIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get a catalog item details",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// // EXAMPLE",
+											"// var itemId = \"/@Catalog/shared/MyTestFolder\"; ",
+											"// var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"// pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"// pm.variables.set(\"type\", \"folders\");",
+											"",
+											"var itemId = \"<item object id>\"; //FILL ME IN",
+											"var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"pm.variables.set(\"type\", \"<item type>\"); //FILL ME IN",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/:type/:id",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										":type",
+										":id"
+									],
+									"query": [
+										{
+											"key": "search",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "type",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "page",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "limit",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "sortBy",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "sortOrder",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "fields",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "excludedFields",
+											"value": "",
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "type",
+											"value": "{{type}}"
+										},
+										{
+											"key": "id",
+											"value": "{{itemIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get catalog items",
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog?search=*&type=",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog"
+									],
+									"query": [
+										{
+											"key": "search",
+											"value": "*"
+										},
+										{
+											"key": "type",
+											"value": "",
+											"description": "<fill me in>"
+										},
+										{
+											"key": "page",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "limit",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "sortBy",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "sortOrder",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "fields",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "excludedFields",
+											"value": "",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get catalog items by type",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// pm.variables.set(\"itemType\", \"datasets\")",
+											"",
+											"pm.variables.set(\"type\", \"<item type>\") //FILL ME IN",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "formdata",
+									"formdata": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/:type?search=*",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										":type"
+									],
+									"query": [
+										{
+											"key": "search",
+											"value": "*"
+										},
+										{
+											"key": "page",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "limit",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "sortBy",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "sortOrder",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "fields",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "excludedFields",
+											"value": "",
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "type",
+											"value": "{{itemType}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Move a catalog item",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var itemId = \"/@Catalog/shared/MyFolder1/ToMove\"; ",
+											"// var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"// pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"// pm.variables.set(\"type\", \"workbooks\");",
+											"// var destId = \"/@Catalog/shared/MyFolder2/ToMove\"; ",
+											"// var destIdEnc = Buffer.from(destId).toString('base64');",
+											"// pm.variables.set(\"destIdEnc\", destIdEnc);",
+											"",
+											"var itemId = \"<object id of item to move>\"; //FILL ME IN",
+											"var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"pm.variables.set(\"type\", \"<item type>\"); //FILL ME IN",
+											"var destId = \"<destination path>\"; //FILL ME IN",
+											"var destIdEnc = Buffer.from(destId).toString('base64');",
+											"pm.variables.set(\"destIdEnc\", destIdEnc);"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "/*{\"destId\": \"string\", \n  \"destParentId\": \"string\", \n  \"newItemName\": \"string\", \n  \"overwrite\": <true / false>, \n  \"createIntermediateFolders\": <true / false>}*/\n \n //Example\n {\"destId\": \"{{destIdEnc}}\"}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/:type/:id/actions/move",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										":type",
+										":id",
+										"actions",
+										"move"
+									],
+									"variable": [
+										{
+											"key": "type",
+											"value": "{{type}}"
+										},
+										{
+											"key": "id",
+											"value": "{{itemIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update a catalog item ACL",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var itemId = \"/@Catalog/shared/MyFolder/ToMove\"; ",
+											"// var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"// pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"// pm.variables.set(\"type\", \"workbooks\");",
+											"",
+											"",
+											"//IMPORTANT NOTE --> GO TO BODY AND FILL OUT INFORMATION THERE AS WELL",
+											"",
+											"var itemId = \"<item object id>\"; //FILL ME IN",
+											"var itemIdEncoded = Buffer.from(itemId).toString('base64');",
+											"pm.variables.set(\"itemIdEncoded\", itemIdEncoded);",
+											"pm.variables.set(\"type\", \"<item type>\"); //FILL ME IN",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\"aclList\": [\n         {       \n          \"accountGuid\": \"<fill in>\",       \n          \"accountType\": \"<fill in>\",       \n          \"accountDisplayName\": \"<fill in>\",       \n          \"permissions\": {\n            \"read\": <true / false>,\n            \"write\": <true / false>,\n            \"list\": <true / false>,\n            \"delete\": <true / false>,\n            \"changePermission\": <true / false>,\n            \"takeOwnership\": <true / false>      \n           }   \n          },   \n          {       \n            <next entry here>\n        }  \n       ],\n       \"recursive\": <true / false>,\n       \"updateMode\": \"<ReplaceAll, ReplaceMatchingAccounts, DeleteMatchingAccounts>\"\n    }\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/:type/:id/actions/updateACL",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										":type",
+										":id",
+										"actions",
+										"updateACL"
+									],
+									"variable": [
+										{
+											"key": "type",
+											"value": "{{type}}"
+										},
+										{
+											"key": "id",
+											"value": "{{itemIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "# General catalog requests are included in this folder.\n\n- **Copy a catalog item:** Create a copy of a catalog item with a given type and id to the same folder or a different folder. Includes the option to specify a different name for the copy and whether to overwrite an existing item with the same name.\n- **Create a folder:** Create a folder\n- **Delete a folder:** Remove a folder form an Analytics instance\n- **Get catalog item ACL:** Get the access control list for a actalog item with a given id\n    \n- **Get catalog item details:** Return information about a catalog item with a given type and id. For example, details such as owner, name, description, id, last modfied date, object type, and parent id. If the item is a container item such as folder or dashboard, sub items can be searched using the search query parameter.\n    \n- **Get catalog item:** Without search criteria, returns a list of supported catalog item types. With search criteria, returns catalog items that match the criteria specified.\n    \n- **Get catalog items by type:** Return catalog items with a given type. For example, return a list of worklists, folders, analyses, and so on. The output from the API is paged. Page details are available in the result headers: oa-current-page, oa-page-count, oa-next-page. The oa-next-page header isn't returned if there's no next page.\n    \n- **Move a catalog item:** Move a catalog item with a given type and id to a specific folder.\n    \n- **Update a catalog item ACL:** Update the access control list (ACL) for a catalog item with a given id."
+				},
+				{
+					"name": "Data Flows",
+					"item": [
+						{
+							"name": "Execute Data Flow",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var dfObjectId = \"'jane.doe@oracle.com'.'myDataFlow'\"",
+											"// var encodedValue = Buffer.from(dfObjectId).toString('base64');",
+											"// pm.environment.set(\"dfObjectIdEncoded\", encodedValue);",
+											"",
+											"var dfObjectId = \"<data flow object id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(dfObjectId).toString('base64');",
+											"pm.environment.set(\"dfObjectIdEncoded\", encodedValue);"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "//Un-comment and fill in if you have a parameterized data flow\n// {\n//   \"parameters\":   [\n//       {\n//         \"parameterName\": \"<sourceParameterName>\",\n//         \"datasetName\": \"<sourceDatasetName>\",\n//         \"type\": \"source\"\n//       },\n//       {\n//         \"parameterName\": \"<targetParameterName>\",\n//         \"datasetName\": \"<targetDatasetName>\",\n//         \"type\": \"target\"\n//       }\n//     ]\n// }",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/dataflows/:dataFlowID/actions/run",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"dataflows",
+										":dataFlowID",
+										"actions",
+										"run"
+									],
+									"variable": [
+										{
+											"key": "dataFlowID",
+											"value": "{{dfObjectIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve Run History",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var dfObjectId = \"'jane.doe@oracle.com'.'myDataFlow'\"",
+											"// var encodedValue = Buffer.from(dfObjectId).toString('base64');",
+											"// pm.environment.set(\"dfObjectIdEncoded\", encodedValue);",
+											"",
+											"",
+											"var dfObjectId = \"<data flow object id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(dfObjectId).toString('base64');",
+											"pm.environment.set(\"dfObjectIdEncoded\", encodedValue);",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/dataflows/:dataFlowID/history",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"dataflows",
+										":dataFlowID",
+										"history"
+									],
+									"query": [
+										{
+											"key": "jobStatus",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "fromStartTime",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "toStartTime",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "numberOfJobs",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "includeTasks",
+											"value": "",
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "dataFlowID",
+											"value": "{{dfObjectIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve Latest Run History",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var dfObjectId = \"'jane.doe@oracle.com'.'myDataFlow'\"",
+											"// var encodedValue = Buffer.from(dfObjectId).toString('base64');",
+											"// pm.environment.set(\"dfObjectIdEncoded\", encodedValue);",
+											"",
+											"var dfObjectId = \"<data flow object id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(dfObjectId).toString('base64');",
+											"pm.environment.set(\"dfObjectIdEncoded\", encodedValue);"
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/dataflows/:dataFlowID/history/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"dataflows",
+										":dataFlowID",
+										"history",
+										"latest"
+									],
+									"query": [
+										{
+											"key": "includeTasks",
+											"value": null,
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "dataFlowID",
+											"value": "{{dfObjectIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve Run Information for Specific JobID",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var dfObjectId = \"'jane.doe@oracle.com'.'myDataFlow'\"",
+											"// var encodedValue = Buffer.from(dfObjectId).toString('base64');",
+											"// pm.environment.set(\"dfObjectIdEncoded\", encodedValue);",
+											"",
+											"// pm.environment.set(\"jobId\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZAABBC\");",
+											"",
+											"var dfObjectId = \"<data flow object id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(dfObjectId).toString('base64');",
+											"pm.environment.set(\"dfObjectIdEncoded\", encodedValue);",
+											"",
+											"pm.environment.set(\"jobId\", \"<job id>\"); //FILL ME IN",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/dataflows/:dataFlowID/history/:jobId",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"dataflows",
+										":dataFlowID",
+										"history",
+										":jobId"
+									],
+									"query": [
+										{
+											"key": "includeTasks",
+											"value": null,
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "dataFlowID",
+											"value": "{{dfObjectIdEncoded}}"
+										},
+										{
+											"key": "jobId",
+											"value": "{{jobId}}"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "# Data flow-related requests are included in this folder."
+				},
+				{
+					"name": "Datasets",
+					"item": [
+						{
+							"name": "Reload Dataset",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var datasetObjectId = \"'jane.doe@oracle.com'.'myDataset'\"",
+											"// var encodedValue = Buffer.from(datasetObjectId).toString('base64');",
+											"// pm.environment.set(\"datasetObjectIdEncoded\", encodedValue);",
+											"",
+											"var datasetObjectId = \"<dataset object id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(datasetObjectId).toString('base64');",
+											"pm.environment.set(\"datasetObjectIdEncoded\", encodedValue);",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/datasets/:datasetID/actions/reload",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"datasets",
+										":datasetID",
+										"actions",
+										"reload"
+									],
+									"variable": [
+										{
+											"key": "datasetID",
+											"value": "{{datasetObjectIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve Run History",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var datasetObjectId = \"'jane.doe@oracle.com'.'myDataset'\"",
+											"// var encodedValue = Buffer.from(datasetObjectId).toString('base64');",
+											"// pm.environment.set(\"datasetObjectIdEncoded\", encodedValue);",
+											"",
+											"var datasetObjectId = \"<dataset object id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(datasetObjectId).toString('base64');",
+											"pm.environment.set(\"datasetObjectIdEncoded\", encodedValue);",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/datasets/:datasetID/history",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"datasets",
+										":datasetID",
+										"history"
+									],
+									"query": [
+										{
+											"key": "jobStatus",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "fromStartTime",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "toStartTime",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "numberOfJobs",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "includeTasks",
+											"value": "",
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "datasetID",
+											"value": "{{datasetObjectIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve Latest Run History",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var datasetObjectId = \"'jane.doe@oracle.com'.'myDataset'\"",
+											"// var encodedValue = Buffer.from(datasetObjectId).toString('base64');",
+											"// pm.environment.set(\"datasetObjectIdEncoded\", encodedValue);",
+											"",
+											"var datasetObjectId = \"<dataset object id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(datasetObjectId).toString('base64');",
+											"pm.environment.set(\"datasetObjectIdEncoded\", encodedValue);",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/datasets/:datasetID/history/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"datasets",
+										":datasetID",
+										"history",
+										"latest"
+									],
+									"query": [
+										{
+											"key": "includeTasks",
+											"value": null,
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "datasetID",
+											"value": "{{datasetObjectIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve Run Information for Specific JobID",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var datasetObjectId = \"'jane.doe@oracle.com'.'myDataset'\"",
+											"// var encodedValue = Buffer.from(datasetObjectId).toString('base64');",
+											"// pm.environment.set(\"datasetObjectIdEncoded\", encodedValue);",
+											"",
+											"// pm.environment.set(\"jobId\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZAABBC\");",
+											"",
+											"var datasetObjectId = \"<dataset object id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(datasetObjectId).toString('base64');",
+											"pm.environment.set(\"datasetObjectIdEncoded\", encodedValue);",
+											"",
+											"pm.environment.set(\"jobId\", \"<job id>\"); //FILL ME IN",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/datasets/:datasetId/history/:jobId",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"datasets",
+										":datasetId",
+										"history",
+										":jobId"
+									],
+									"query": [
+										{
+											"key": "includeTasks",
+											"value": null,
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "datasetId",
+											"value": "{{datasetObjectIdEncoded}}"
+										},
+										{
+											"key": "jobId",
+											"value": "{{jobId}}"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "# Dataset-related requests are included in this folder."
+				},
+				{
+					"name": "Sequences",
+					"item": [
+						{
+							"name": "Execute Sequence",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var seqObjectId = \"'jane.doe@oracle.com'.'mySequence'\"",
+											"// var encodedValue = Buffer.from(seqObjectId).toString('base64');",
+											"// pm.environment.set(\"sequenceObjectIdEncoded\", encodedValue);",
+											"",
+											"var seqObjectId = \"<sequence id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(seqObjectId).toString('base64');",
+											"pm.environment.set(\"sequenceObjectIdEncoded\", encodedValue);",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/sequences/:sequenceID/actions/run",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"sequences",
+										":sequenceID",
+										"actions",
+										"run"
+									],
+									"variable": [
+										{
+											"key": "sequenceID",
+											"value": "{{sequenceObjectIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve Run History",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var seqObjectId = \"'jane.doe@oracle.com'.'mySequence'\"",
+											"// var encodedValue = Buffer.from(seqObjectId).toString('base64');",
+											"// pm.environment.set(\"sequenceObjectIdEncoded\", encodedValue);",
+											"",
+											"var seqObjectId = \"<sequence id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(seqObjectId).toString('base64');",
+											"pm.environment.set(\"sequenceObjectIdEncoded\", encodedValue);",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/sequences/:sequenceId/history",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"sequences",
+										":sequenceId",
+										"history"
+									],
+									"query": [
+										{
+											"key": "jobStatus",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "fromStartTime",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "toStartTime",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "numberOfJobs",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "includeTasks",
+											"value": "",
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "sequenceId",
+											"value": "{{sequenceObjectIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve Latest Run History",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var seqObjectId = \"'jane.doe@oracle.com'.'mySequence'\"",
+											"// var encodedValue = Buffer.from(seqObjectId).toString('base64');",
+											"// pm.environment.set(\"sequenceObjectIdEncoded\", encodedValue);",
+											"",
+											"var seqObjectId = \"<sequence id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(seqObjectId).toString('base64');",
+											"pm.environment.set(\"sequenceObjectIdEncoded\", encodedValue);",
+											"",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/sequences/:sequenceId/history/latest",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"sequences",
+										":sequenceId",
+										"history",
+										"latest"
+									],
+									"query": [
+										{
+											"key": "includeTasks",
+											"value": null,
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "sequenceId",
+											"value": "{{sequenceObjectIdEncoded}}"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Retrieve Run Information for Specific JobID",
+							"event": [
+								{
+									"listen": "prerequest",
+									"script": {
+										"exec": [
+											"// //EXAMPLE",
+											"// var seqObjectId = \"'jane.doe@oracle.com'.'mySequence'\"",
+											"// var encodedValue = Buffer.from(seqObjectId).toString('base64');",
+											"// pm.environment.set(\"seqObjectIdEncoded\", encodedValue);",
+											"",
+											"// pm.environment.set(\"jobId\", \"ABCDEFGHIJKLMNOPQRSTUVWXYZAABBC\");",
+											"",
+											"var seqObjectId = \"<sequence flow object id>\" //FILL ME IN",
+											"var encodedValue = Buffer.from(seqObjectId).toString('base64');",
+											"pm.environment.set(\"seqObjectIdEncoded\", encodedValue);",
+											"",
+											"pm.environment.set(\"jobId\", \"<job id>\"); //FILL ME IN",
+											"",
+											""
+										],
+										"type": "text/javascript",
+										"packages": {}
+									}
+								}
+							],
+							"protocolProfileBehavior": {
+								"disableBodyPruning": true,
+								"disabledSystemHeaders": {}
+							},
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "{{accessTok}}",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": []
+								},
+								"url": {
+									"raw": "{{baseURL}}/api/20210901/catalog/sequences/:sequenceId/history/:jobId",
+									"host": [
+										"{{baseURL}}"
+									],
+									"path": [
+										"api",
+										"20210901",
+										"catalog",
+										"sequences",
+										":sequenceId",
+										"history",
+										":jobId"
+									],
+									"query": [
+										{
+											"key": "includeTasks",
+											"value": null,
+											"disabled": true
+										}
+									],
+									"variable": [
+										{
+											"key": "sequenceId",
+											"value": "{{sequenceObjectIdEncoded}}"
+										},
+										{
+											"key": "jobId",
+											"value": "{{jobId}}"
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"description": "# Sequence-related requests are included in this folder."
+				}
+			],
+			"description": "There are 4 folders in the Catalog API section.\n\n1. **General** - The content types that this API supports include folders, workbooks, subject areas, analyses, dashboards, dashboard pages, reports, connections, datasets, data flows, sequences, scripts, and semantic models.\n    \n2. **Data Flows** - This folder contains data flow execution and history APIs.\n    \n3. **Datasets** - This folder contains dataset execution and history APIs.\n    \n4. **Sequences** - This folder contains sequence execution and history APIs."
+		},
+		{
+			"name": "Snapshots",
+			"item": [
+				{
+					"name": "Create a snapshot",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTok}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"string\",\n  \"storage\": {\n    \"auth\": {\n      \"ociRegion\": \"string\",\n      \"ociTenancyId\": \"string\",\n      \"ociUserId\": \"string\",\n      \"ociKeyFingerprint\": \"string\",\n      \"ociPrivateKeyWrapped\": \"string\"\n    },\n    \"bucket\": \"string\"\n  },\n  \"bar\": {\n    \"uri\": \"string\",\n    \"password\": \"string\"\n  }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/20210901/snapshots",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"20210901",
+								"snapshots"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a snapshot",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var snapId = \"<snapshot id>\" //FILL ME IN",
+									"var encoded = Buffer.from(snapId).toString('base64');",
+									"pm.environment.set(snapshotId, encoded);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTok}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/20210901/snapshots/:snapshotId",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"20210901",
+								"snapshots",
+								":snapshotId"
+							],
+							"variable": [
+								{
+									"key": "snapshotId",
+									"value": "{{snapshotId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get a snapshot",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"var snapId = \"<snapshot id>\" //FILL ME IN",
+									"var encoded = Buffer.from(snapId).toString('base64');",
+									"pm.environment.set(snapshotId, encoded);",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTok}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/20210901/snapshots/:snapshotId",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"20210901",
+								"snapshots",
+								":snapshotId"
+							],
+							"variable": [
+								{
+									"key": "snapshotId",
+									"value": "{{snapshotId}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all snapshots",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessTok}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/20210901/snapshots",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"20210901",
+								"snapshots"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "The requests in this folder are related to Snapshots, which are bar files that capture the state of an analytics instance."
+		}
+	]
+}
